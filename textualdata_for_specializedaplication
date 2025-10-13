@@ -1,0 +1,128 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_QUEUE 100
+
+// Node structure for the binary tree
+struct Node {
+    char ch;
+    int freq;
+    struct Node *left, *right;
+};
+
+// Queue structure for level-order insertion
+struct Queue {
+    struct Node* data[MAX_QUEUE];
+    int front, rear;
+};
+
+// Queue operations
+void initQueue(struct Queue* q) {
+    q->front = q->rear = 0;
+}
+
+int isEmpty(struct Queue* q) {
+    return q->front == q->rear;
+}
+
+void enqueue(struct Queue* q, struct Node* node) {
+    if (q->rear < MAX_QUEUE)
+        q->data[q->rear++] = node;
+}
+
+struct Node* dequeue(struct Queue* q) {
+    if (!isEmpty(q))
+        return q->data[q->front++];
+    return NULL;
+}
+
+// Create a new tree node
+struct Node* createNode(char ch) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->ch = ch;
+    newNode->freq = 1;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Search for character in tree and increment frequency if found
+int updateFrequency(struct Node* root, char ch) {
+    if (root == NULL) return 0;
+    struct Queue q;
+    initQueue(&q);
+    enqueue(&q, root);
+
+    while (!isEmpty(&q)) {
+        struct Node* temp = dequeue(&q);
+        if (temp->ch == ch) {
+            temp->freq++;
+            return 1;
+        }
+        if (temp->left) enqueue(&q, temp->left);
+        if (temp->right) enqueue(&q, temp->right);
+    }
+    return 0;
+}
+
+// Insert character level-wise
+void insertLevelWise(struct Node** root, char ch) {
+    if (*root == NULL) {
+        *root = createNode(ch);
+        return;
+    }
+
+    if (updateFrequency(*root, ch)) return;
+
+    struct Queue q;
+    initQueue(&q);
+    enqueue(&q, *root);
+
+    while (!isEmpty(&q)) {
+        struct Node* temp = dequeue(&q);
+        if (temp->left == NULL) {
+            temp->left = createNode(ch);
+            return;
+        } else {
+            enqueue(&q, temp->left);
+        }
+
+        if (temp->right == NULL) {
+            temp->right = createNode(ch);
+            return;
+        } else {
+            enqueue(&q, temp->right);
+        }
+    }
+}
+
+// Level-order traversal to print character frequencies
+void levelOrderPrint(struct Node* root) {
+    if (root == NULL) return;
+    struct Queue q;
+    initQueue(&q);
+    enqueue(&q, root);
+
+    while (!isEmpty(&q)) {
+        struct Node* temp = dequeue(&q);
+        printf("(%c, %d) ", temp->ch, temp->freq);
+        if (temp->left) enqueue(&q, temp->left);
+        if (temp->right) enqueue(&q, temp->right);
+    }
+    printf("\n");
+}
+
+// Main function
+int main() {
+    char input[] = "programming";
+    struct Node* root = NULL;
+
+    for (int i = 0; i < strlen(input); i++) {
+        insertLevelWise(&root, input[i]);
+    }
+
+    printf("Level Order Traversal with Frequencies:\n");
+    levelOrderPrint(root);
+
+    return 0;
+}
