@@ -1,116 +1,120 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #define MAX 100
 
 // Stack structure
 typedef struct {
-    char operations[MAX][50]; // Array of strings
+    int data[MAX];
     int top;
 } Stack;
 
 // Initialize stack
-void initStack(Stack* s) {
+void initStack(Stack *s) {
     s->top = -1;
 }
 
 // Check if stack is empty
-int isEmpty(Stack* s) {
+int isEmpty(Stack *s) {
     return s->top == -1;
 }
 
 // Check if stack is full
-int isFull(Stack* s) {
+int isFull(Stack *s) {
     return s->top == MAX - 1;
 }
 
-// Push operation to stack
-void push(Stack* s, const char* op) {
+// Push operation
+void push(Stack *s, int value) {
     if (isFull(s)) {
-        printf("Stack overflow. Cannot perform operation.\n");
+        printf("Stack Overflow\n");
         return;
     }
-    s->top++;
-    strcpy(s->operations[s->top], op);
+    s->data[++(s->top)] = value;
 }
 
-// Pop operation from stack
-char* pop(Stack* s) {
+// Pop operation
+int pop(Stack *s) {
     if (isEmpty(s)) {
-        return NULL;
+        printf("Stack Underflow\n");
+        return -1;
     }
-    return s->operations[s->top--];
-}
-
-// Peek top operation
-char* peek(Stack* s) {
-    if (isEmpty(s)) {
-        return NULL;
-    }
-    return s->operations[s->top];
+    return s->data[(s->top)--];
 }
 
 // Clear stack
-void clear(Stack* s) {
+void clear(Stack *s) {
     s->top = -1;
 }
 
 // Perform operation
-void performOperation(Stack* undo, Stack* redo, const char* op) {
-    push(undo, op);
-    clear(redo);
-    printf("Performed operation: \"%s\"\n", op);
+void performOperation(Stack *undo, Stack *redo, int opCode) {
+    push(undo, opCode);
+    clear(redo);  // Once a new operation is done, redo history is cleared
+    printf("Performed operation: %d\n", opCode);
 }
 
 // Undo operation
-void undoOperation(Stack* undo, Stack* redo) {
-    char* op = pop(undo);
-    if (op == NULL) {
-        printf("Nothing to undo.\n");
+void undoOperation(Stack *undo, Stack *redo) {
+    if (isEmpty(undo)) {
+        printf("Nothing to undo\n");
         return;
     }
+    int op = pop(undo);
     push(redo, op);
-    char* next = peek(undo);
-    if (next)
-        printf("Undone. Next Operation that can be undone is = \"%s\"\n", next);
-    else
-        printf("Undone. No more operations to undo.\n");
+    printf("Undone operation: %d\n", op);
 }
 
 // Redo operation
-void redoOperation(Stack* undo, Stack* redo) {
-    char* op = pop(redo);
-    if (op == NULL) {
-        printf("Nothing to redo.\n");
+void redoOperation(Stack *undo, Stack *redo) {
+    if (isEmpty(redo)) {
+        printf("Nothing to redo\n");
         return;
     }
+    int op = pop(redo);
     push(undo, op);
-    char* next = peek(redo);
-    if (next)
-        printf("Redo completed. Next Operation that can be redone is = \"%s\"\n", next);
-    else
-        printf("Redo completed. No more operations to redo.\n");
+    printf("Redone operation: %d\n", op);
 }
 
-// Main function
 int main() {
     Stack undoStack, redoStack;
     initStack(&undoStack);
     initStack(&redoStack);
 
-    performOperation(&undoStack, &redoStack, "op1");
-    performOperation(&undoStack, &redoStack, "op2");
-    performOperation(&undoStack, &redoStack, "op3");
+    int choice, opCode;
 
-    undoOperation(&undoStack, &redoStack);
-    undoOperation(&undoStack, &redoStack);
+    while (1) {
+        printf("\n--- Undo/Redo Menu ---\n");
+        printf("1. Perform Operation\n");
+        printf("2. Undo Operation\n");
+        printf("3. Redo Operation\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
 
-    redoOperation(&undoStack, &redoStack);
+        switch (choice) {
+            case 1:
+                printf("Enter operation code (integer): ");
+                scanf("%d", &opCode);
+                performOperation(&undoStack, &redoStack, opCode);
+                break;
 
-    performOperation(&undoStack, &redoStack, "op4");
+            case 2:
+                undoOperation(&undoStack, &redoStack);
+                break;
 
-    undoOperation(&undoStack, &redoStack);
+            case 3:
+                redoOperation(&undoStack, &redoStack);
+                break;
+
+            case 4:
+                printf("Exiting...\n");
+                exit(0);
+
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
 
     return 0;
 }
